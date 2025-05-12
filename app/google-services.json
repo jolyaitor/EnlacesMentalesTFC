@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "750728318103",
+    "project_id": "enlacesmentalestfc",
+    "storage_bucket": "enlacesmentalestfc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750728318103:android:6f699f21dbe5a1a5c62dd2",
+        "android_client_info": {
+          "package_name": "com.example.enlacesmentales"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfVr-Xp1YpwMaV1Fi4rIKLwaFvcIMy4Wk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
