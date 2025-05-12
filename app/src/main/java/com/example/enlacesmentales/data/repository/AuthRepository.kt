@@ -26,7 +26,7 @@ class AuthRepository @Inject constructor(
             val uid = authResult.user?.uid ?: return Result.failure(Exception("UID nulo"))
 
             val user = User(
-                id = uid,
+                uid = uid,
                 name = nombre,
                 username = username,
                 email = email

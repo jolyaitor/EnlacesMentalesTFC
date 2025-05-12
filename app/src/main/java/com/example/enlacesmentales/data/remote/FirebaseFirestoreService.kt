@@ -1,7 +1,6 @@
 package com.example.enlacesmentales.data.remote
 
 
-import com.enlacemental.data.model.User
 import com.example.enlacesmentales.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

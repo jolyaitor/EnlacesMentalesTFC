@@ -1,12 +1,12 @@
 package com.example.enlacesmentales.navigation
 
-import com.example.enlacesmentales.presentation.auth.LoginScreen
-
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.enlacesmentales.ui.screens.Home.HomeScreen
+import com.example.enlacesmentales.ui.screens.auth.Login.LoginScreen
 import com.example.enlacesmentales.ui.screens.auth.Registro.RegisterScreen
 
 sealed class Screen(val route: String) {
@@ -24,6 +24,9 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable(Screen.Register.route) {
             RegisterScreen(navController)
+        }
+        composable(Screen.Home.route) {
+            HomeScreen(navController)
         }
         // Agrega aquí HomeScreen, juegos, etc.
     }

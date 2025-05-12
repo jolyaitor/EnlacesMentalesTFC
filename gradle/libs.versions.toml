@@ -5,6 +5,7 @@ hiltAndroid = "2.56.1"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
+ksp = { id = "com.google.devtools.ksp", version = "1.9.21-1.0.15" }
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
