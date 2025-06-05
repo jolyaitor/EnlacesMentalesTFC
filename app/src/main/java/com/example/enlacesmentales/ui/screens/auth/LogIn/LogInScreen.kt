@@ -89,6 +89,14 @@ fun LoginScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+            // Enlace a la pantalla de “Recuperar contraseña”
+            TextButton(onClick = {
+                navController.navigate(Screen.ForgotPassword.route)
+            }) {
+                Text("¿Olvidaste tu contraseña?")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
             TextButton(onClick = {
                 navController.navigate(Screen.Register.route)
             }) {

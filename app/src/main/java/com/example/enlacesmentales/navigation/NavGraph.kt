@@ -1,6 +1,9 @@
 package com.example.enlacesmentales.navigation
 
 
+import ForgotPasswordScreen
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -19,8 +22,10 @@ sealed class Screen(val route: String) {
     object Progreso : Screen("progreso")
     object AjustesUsuario : Screen("ajustes_usuario")
     object MemoriaScreen : Screen("memoria_screen")
+    object ForgotPassword : Screen("forgotpassword")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
@@ -39,10 +44,12 @@ fun AppNavGraph(navController: NavHostController) {
         composable(Screen.AjustesUsuario.route) {
             AjustesUsuarioScreen(navController)
         }
+        composable(Screen.MemoriaScreen.route) {
+            MemoriaScreen(navController)
+        }
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(navController)
+        }
 
-       composable(Screen.MemoriaScreen.route) {
-           MemoriaScreen(navController)
-       }
-        // Agrega aquí HomeScreen, juegos, etc.
     }
 }
