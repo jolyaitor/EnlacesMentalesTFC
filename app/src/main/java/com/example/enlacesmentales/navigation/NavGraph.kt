@@ -14,7 +14,8 @@ import com.example.enlacesmentales.ui.screens.ajustes.AjustesUsuarioScreen
 import com.example.enlacesmentales.ui.screens.auth.Login.LoginScreen
 import com.example.enlacesmentales.ui.screens.auth.Registro.RegisterScreen
 import com.example.enlacesmentales.ui.screens.juegos.EncuentraLasDiferenciasScreen
-import com.example.enlacesmentales.ui.screens.juegos.cartas.MemoriaScreen
+import com.example.enlacesmentales.ui.screens.juegos.cartas.dificil.MemoriaDificilScreen
+import com.example.enlacesmentales.ui.screens.juegos.cartas.facil.MemoriaScreen
 import com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil.EncuentraLasDiferenciasDificilScreen
 
 sealed class Screen(val route: String) {
@@ -48,8 +49,15 @@ fun AppNavGraph(navController: NavHostController) {
         composable(Screen.AjustesUsuario.route) {
             AjustesUsuarioScreen(navController)
         }
-        composable(Screen.MemoriaScreen.route) {
-            MemoriaScreen(navController)
+        composable(
+            route = "memoria_screen?dificultad={dificultad}"
+        ) { backStackEntry ->
+            val dificultad = backStackEntry.arguments?.getString("dificultad") ?: "facil"
+            if (dificultad == "dificil") {
+                MemoriaDificilScreen(navController)
+            } else {
+                MemoriaScreen(navController)
+            }
         }
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(navController)
