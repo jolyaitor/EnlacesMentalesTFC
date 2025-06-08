@@ -1,6 +1,5 @@
 package com.example.enlacesmentales.ui.screens.ajustes
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,13 +35,28 @@ fun AjustesUsuarioScreen(
     var currentPassVisible by remember { mutableStateOf(false) }
     var newPassVisible by remember { mutableStateOf(false) }
     var repeatPassVisible by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    var shouldLogout by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is AjustesViewModel.UIEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
-                is AjustesViewModel.UIEvent.ShowSuccess -> snackbarHostState.showSnackbar(event.message)
-                is AjustesViewModel.UIEvent.Logout -> navController.navigate("login") { popUpTo(0) }
+                is AjustesViewModel.UIEvent.ShowError -> {
+                    shouldLogout = false // Bloquea redirección si hubo error
+                    snackbarHostState.showSnackbar(event.message)
+                }
+
+                is AjustesViewModel.UIEvent.ShowSuccess -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+
+                is AjustesViewModel.UIEvent.Logout -> {
+                    shouldLogout = true
+                    navController.navigate("login") {
+                        popUpTo(0)
+                    }
+                }
             }
         }
     }
@@ -195,7 +209,9 @@ fun AjustesUsuarioScreen(
 
             // Accept Button
             Button(
-                onClick = viewModel::onSaveClick,
+                onClick = {
+                    showConfirmDialog = true
+                },
                 modifier = Modifier
                     .width(180.dp)
                     .align(Alignment.CenterHorizontally),
@@ -205,6 +221,32 @@ fun AjustesUsuarioScreen(
             ) {
                 Text("Aceptar", color = Color.White)
             }
+
+            if (showConfirmDialog) {
+                AlertDialog(
+                    onDismissRequest = { showConfirmDialog = false },
+                    title = { Text("Confirmar cambio de correo") },
+                    text = {
+                        Text("¿Estás seguro de que tienes acceso al nuevo correo '${uiState.email}'? Si no puedes verificarlo, podrías perder acceso a tu cuenta.")
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showConfirmDialog = false
+                            viewModel.onSaveClick()
+                        }) {
+                            Text("Sí, continuar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showConfirmDialog = false
+                        }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+
         }
 
         // Snackbar

@@ -1,3 +1,4 @@
+// HomeScreen.kt
 package com.example.enlacesmentales.ui.screens.Home
 
 import android.os.Build
@@ -8,11 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,25 +17,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.data.model.Juego
-import com.example.enlacesmentales.ui.components.TopBar
+import com.example.enlacesmentales.navigation.Screen
 import com.example.enlacesmentales.ui.components.BottomNavigationBar
 import com.example.enlacesmentales.ui.components.GameSelectionDialog
+import com.example.enlacesmentales.ui.components.TopBar
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     var juegoSeleccionado by remember { mutableStateOf<Juego?>(null) }
 
+    // 1. Estado para el nuevo diálogo de reautenticación
 
+    // Estados para los diálogos anteriores (opciones, cambiar correo, borrar cuenta)
+    val showOptionsDialog by viewModel.showOptionsDialog.collectAsState()
+    val showDeleteConfirmDialog by viewModel.showDeleteConfirmDialog.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     val currentRoute = navController.currentBackStackEntry?.destination?.route
 
     Scaffold(
         topBar = {
             TopBar(
                 onUserClick = { navController.navigate("ajustes_usuario") },
-                onSettingsClick = {  }
+                onSettingsClick = { viewModel.onOptionsClicked() }
             )
         },
         bottomBar = {
@@ -46,7 +58,8 @@ fun HomeScreen(navController: NavController) {
                 navController = navController,
                 currentRoute = currentRoute
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Column(
             Modifier
@@ -56,14 +69,12 @@ fun HomeScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(16.dp))
-
             Text(
                 text = "JUEGOS",
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(Modifier.height(24.dp))
 
             LazyVerticalGrid(
@@ -97,7 +108,7 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
-        // Diálogo de selección de juego
+        // Diálogo de selección de juego (igual que antes)
         juegoSeleccionado?.let { juego ->
             GameSelectionDialog(
                 gameTitle = juego.titulo,
@@ -110,5 +121,125 @@ fun HomeScreen(navController: NavController) {
                 }
             )
         }
+
+        // 2. Recoger eventos de Snackbar
+        LaunchedEffect(Unit) {
+            viewModel.snackbarMessage.collectLatest { mensaje ->
+                snackbarHostState.showSnackbar(mensaje)
+            }
+        }
+
+        // 3. Recoger eventos de navegación
+        LaunchedEffect(Unit) {
+            viewModel.navigationEvents.collectLatest { evento ->
+                when (evento) {
+                    is SettingsNavigation.ToLogin -> {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                    else -> Unit
+                }
+            }
+        }
+
+        // ──────── DIÁLOGO PRINCIPAL: TRES OPCIONES ────────
+        if (showOptionsDialog) {
+            AccountOptionsDialog(
+                onDismiss = { viewModel.onOptionsDialogDismiss() },
+                onLogout = { viewModel.onLogoutSelected() },
+                onDeleteAccount = { viewModel.onDeleteAccountSelected() }
+            )
+        }
+
+
+        // ──────── DIÁLOGO CONFIRMACIÓN “BORRAR CUENTA” ────────
+        if (showDeleteConfirmDialog) {
+            DeleteAccountConfirmDialog(
+                onDismiss = { viewModel.onDeleteConfirmDialogDismiss() },
+                onConfirm = { viewModel.deleteAccount() }
+            )
+        }
     }
+}
+
+/**
+ * Diálogo con las tres opciones:
+ *  - Cambiar correo electrónico
+ *  - Cerrar sesión
+ *  - Borrar cuenta
+ */
+@Composable
+private fun AccountOptionsDialog(
+    onDismiss: () -> Unit,
+    onLogout: () -> Unit,
+    onDeleteAccount: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Ajustes de cuenta") },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Divider()
+                Text(
+                    text = "Cerrar sesión",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onLogout() }
+                        .padding(vertical = 12.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Divider()
+                Text(
+                    text = "Borrar cuenta",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onDeleteAccount() }
+                        .padding(vertical = 12.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = {},
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .wrapContentHeight()
+    )
+}
+
+
+/**
+ * Diálogo de confirmación para borrar la cuenta.
+ */
+@Composable
+private fun DeleteAccountConfirmDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Borrar cuenta") },
+        text = {
+            Text(
+                "¿Estás seguro de que deseas borrar tu cuenta? " +
+                        "Esta acción no se puede deshacer.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Eliminar", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.fillMaxWidth(0.9f)
+    )
 }

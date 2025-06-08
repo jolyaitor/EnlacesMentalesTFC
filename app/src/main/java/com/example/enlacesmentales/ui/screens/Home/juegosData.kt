@@ -12,10 +12,10 @@ val juegos = listOf(
         rutaNavegacion = Screen.MemoriaScreen.route
     ),
     Juego(
-        "Diferencias2",
+        "Diferencias",
         "Encuentra las diferencias que hay entre las dos imágenes en el menor tiempo posible.",
         iconoResId = R.drawable.encuentra_diferencias,
-        "atencion"
+        rutaNavegacion = Screen.Diferencias.route
     ),
     Juego(
         "Campos semánticos",

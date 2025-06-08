@@ -13,7 +13,9 @@ import com.example.enlacesmentales.ui.screens.Progreso.ProgresoScreen
 import com.example.enlacesmentales.ui.screens.ajustes.AjustesUsuarioScreen
 import com.example.enlacesmentales.ui.screens.auth.Login.LoginScreen
 import com.example.enlacesmentales.ui.screens.auth.Registro.RegisterScreen
+import com.example.enlacesmentales.ui.screens.juegos.EncuentraLasDiferenciasScreen
 import com.example.enlacesmentales.ui.screens.juegos.cartas.MemoriaScreen
+import com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil.EncuentraLasDiferenciasDificilScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -23,6 +25,8 @@ sealed class Screen(val route: String) {
     object AjustesUsuario : Screen("ajustes_usuario")
     object MemoriaScreen : Screen("memoria_screen")
     object ForgotPassword : Screen("forgotpassword")
+    object Diferencias : Screen("diferencias")
+
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -49,6 +53,16 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(navController)
+        }
+        composable(
+            route = "diferencias?dificultad={dificultad}"
+        ) { backStackEntry ->
+            val dificultad = backStackEntry.arguments?.getString("dificultad") ?: "facil"
+            if (dificultad == "dificil") {
+                EncuentraLasDiferenciasDificilScreen(navController)
+            } else {
+                EncuentraLasDiferenciasScreen(navController)
+            }
         }
 
     }
