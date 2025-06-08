@@ -1,8 +1,8 @@
 package com.example.enlacesmentales.ui.screens.Home
 
-import com.example.enlacesmentales.R
 import com.example.enlacesmentales.data.model.Juego
 import com.example.enlacesmentales.navigation.Screen
+import com.example.enlacesmentales.R
 
 val juegos = listOf(
     Juego(
@@ -21,7 +21,7 @@ val juegos = listOf(
         "Campos semánticos",
         "Arrastra las palabras a los campos semánticos que están asociadas",
         iconoResId = R.drawable.campos_semanticos,
-        "secuencias"
+        rutaNavegacion = Screen.CamposSemanticos.route
     ),
     Juego(
         "Encuentra el objeto",
