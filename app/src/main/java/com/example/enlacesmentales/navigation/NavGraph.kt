@@ -17,6 +17,7 @@ import com.example.enlacesmentales.ui.screens.juegos.EncuentraLasDiferenciasScre
 import com.example.enlacesmentales.ui.screens.juegos.cartas.dificil.MemoriaDificilScreen
 import com.example.enlacesmentales.ui.screens.juegos.cartas.facil.MemoriaScreen
 import com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil.EncuentraLasDiferenciasDificilScreen
+import com.example.enlacesmentales.ui.screens.juegos.encuentrapersonaje.EncuentraPersonajeDificilScreen
 import com.example.enlacesmentales.ui.screens.juegos.encuentrapersonaje.EncuentraPersonajeScreen
 import com.example.enlacesmentales.ui.screens.juegos.semanticos.CamposSemanticosScreen
 import com.example.enlacesmentales.ui.screens.juegos.semanticos.dificil.CamposSemanticosDificilScreen
@@ -91,7 +92,7 @@ fun AppNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val dificultad = backStackEntry.arguments?.getString("dificultad") ?: "facil"
             if (dificultad == "dificil") {
-                EncuentraPersonajeScreen(navController)
+                EncuentraPersonajeDificilScreen(navController)
             } else {
                 EncuentraPersonajeScreen(navController)
             }
