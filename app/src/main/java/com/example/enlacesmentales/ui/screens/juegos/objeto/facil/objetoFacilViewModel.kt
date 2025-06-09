@@ -1,8 +1,11 @@
 package com.example.enlacesmentales.ui.screens.juegos.encuentrapersonaje
 
 import androidx.compose.ui.geometry.Offset
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +17,13 @@ import kotlin.math.sqrt
 data class Personaje(val nombre: String, val posicion: Offset)
 
 @HiltViewModel
-class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
+class EncuentraPersonajeViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var resultadoGuardado = false
 
     private val _objetivos = listOf(
         Personaje("Manu", Offset(0.026953313f, 0.3583053f)),
@@ -23,7 +32,6 @@ class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
         Personaje("Luli", Offset(0.35257387f, 0.15159722f)),
         Personaje("Franco", Offset(0.74754167f, 0.7021837f))
     )
-
     val objetivos: List<Personaje> = _objetivos
 
     private val _encontrados = MutableStateFlow<List<Personaje>>(emptyList())
@@ -42,7 +50,6 @@ class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun iniciarTemporizador() {
-        // Asegúrate de cancelar cualquier temporizador anterior
         temporizadorJob?.cancel()
 
         temporizadorJob = viewModelScope.launch {
@@ -52,6 +59,10 @@ class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
 
                 if (estanTodosEncontrados()) {
                     detenerTemporizador()
+                    if (!resultadoGuardado) {
+                        guardarResultadoFinal()
+                        resultadoGuardado = true
+                    }
                 }
             }
         }
@@ -71,6 +82,11 @@ class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
         val encontrado = _objetivos.find { it.posicion.distanceTo(normalizedOffset) < 0.03f }
         if (encontrado != null) {
             _encontrados.update { it + encontrado }
+
+            if (estanTodosEncontrados() && !resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
+            }
         }
     }
 
@@ -78,11 +94,16 @@ class EncuentraPersonajeViewModel @Inject constructor() : ViewModel() {
         return _encontrados.value.size == _objetivos.size
     }
 
-    fun reiniciarJuego() {
-        _encontrados.value = emptyList()
-        _tiempoTranscurrido.value = 0
-        _temporizadorActivo.value = true
-        iniciarTemporizador()
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "EncuentraObjeto_$dificultad",
+                tiempoEnSegundos = _tiempoTranscurrido.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
+        }
     }
 }
 

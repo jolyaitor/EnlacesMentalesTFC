@@ -4,6 +4,7 @@ package com.example.enlacesmentales.di
 import com.example.enlacesmentales.data.remote.FirebaseAuthService
 import com.example.enlacesmentales.data.remote.FirebaseFirestoreService
 import com.example.enlacesmentales.data.repository.AuthRepository
+import com.example.enlacesmentales.data.repository.ProgresoRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -43,4 +44,12 @@ object AppModule {
         authService: FirebaseAuthService,
         firestoreService: FirebaseFirestoreService
     ): AuthRepository = AuthRepository(auth, authService, firestoreService)
+
+    @Provides
+    @Singleton
+    fun provideProgresoRepository(
+        firestoreService: FirebaseFirestoreService,
+        auth: FirebaseAuth
+    ): ProgresoRepository = ProgresoRepository(firestoreService, auth)
+
 }

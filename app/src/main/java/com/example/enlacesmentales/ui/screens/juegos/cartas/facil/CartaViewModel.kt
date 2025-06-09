@@ -1,12 +1,17 @@
 package com.example.enlacesmentales.ui.screens.juegos.cartas.facil
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class MemoryCard(
     val id: Int,
@@ -15,7 +20,14 @@ data class MemoryCard(
     var isMatched: Boolean = false
 )
 
-class MemoriaViewModel : ViewModel() {
+@HiltViewModel
+class MemoriaViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var resultadoGuardado = false
 
     private val _cards = MutableStateFlow(generateCards())
     val cards: StateFlow<List<MemoryCard>> = _cards
@@ -33,6 +45,11 @@ class MemoriaViewModel : ViewModel() {
             while (!_isCompleted.value) {
                 delay(1000L)
                 _elapsedTime.update { it + 1 }
+            }
+
+            if (!_isCompleted.value.not() && !resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
             }
         }
     }
@@ -69,14 +86,31 @@ class MemoriaViewModel : ViewModel() {
                 }
             }
         }
+
         if (updatedCards.all { it.isMatched }) {
             _isCompleted.value = true
+            if (!resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
+            }
+        }
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "Memoria_$dificultad",
+                tiempoEnSegundos = _elapsedTime.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
         }
     }
 
     companion object {
         private fun generateCards(): List<MemoryCard> {
-            val contents = listOf("🍕","🍌","🌶️")
+            val contents = listOf("🍕", "🍌", "🌶️")
             val paired = (contents + contents).shuffled()
             return paired.mapIndexed { index, content -> MemoryCard(id = index, content = content) }
         }

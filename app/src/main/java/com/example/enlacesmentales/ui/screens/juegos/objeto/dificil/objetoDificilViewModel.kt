@@ -1,8 +1,11 @@
 package com.example.enlacesmentales.ui.screens.juegos.encuentrapersonaje
 
 import androidx.compose.ui.geometry.Offset
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +17,10 @@ import kotlin.math.sqrt
 data class ObjetoDificil(val nombre: String, val posicion: Offset)
 
 @HiltViewModel
-class EncuentraPersonajeDificilViewModel @Inject constructor() : ViewModel() {
+class EncuentraPersonajeDificilViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
 
     private val _objetivos = listOf(
         ObjetoDificil("Manu", Offset(0.7215367f, 0.4912067f)),
@@ -31,6 +37,7 @@ class EncuentraPersonajeDificilViewModel @Inject constructor() : ViewModel() {
         ObjetoDificil("Botella", Offset(0.073184796f, 0.4840095f)),
     )
 
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
 
     val objetivos: List<ObjetoDificil> = _objetivos
 
@@ -60,6 +67,7 @@ class EncuentraPersonajeDificilViewModel @Inject constructor() : ViewModel() {
 
                 if (estanTodosEncontrados()) {
                     detenerTemporizador()
+                    guardarResultadoFinal()
                 }
             }
         }
@@ -86,13 +94,20 @@ class EncuentraPersonajeDificilViewModel @Inject constructor() : ViewModel() {
         return _encontrados.value.size == _objetivos.size
     }
 
-    fun reiniciarJuego() {
-        _encontrados.value = emptyList()
-        _tiempoTranscurrido.value = 0
-        _temporizadorActivo.value = true
-        iniciarTemporizador()
+
+    fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "EncuentraObjeto_$dificultad",
+                tiempoEnSegundos = tiempoTranscurrido.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
+        }
     }
 }
+
 
 // Función auxiliar para calcular distancia
 private fun Offset.distanceTo(other: Offset): Float {

@@ -1,18 +1,28 @@
 package com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil
 
-
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class EncuentraDiferenciasDificilViewModel : ViewModel() {
+@HiltViewModel
+class EncuentraDiferenciasDificilViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
 
     private val _foundDifferences = MutableStateFlow<List<Offset>>(emptyList())
     val foundDifferences: StateFlow<List<Offset>> = _foundDifferences
@@ -22,6 +32,8 @@ class EncuentraDiferenciasDificilViewModel : ViewModel() {
 
     private val _imageSize = MutableStateFlow(IntSize(1, 1))
     val imageSize: StateFlow<IntSize> = _imageSize
+
+    private var resultadoGuardado = false
 
     val differences = listOf(
         Offset(0.8804049f, 0.2534579f),
@@ -36,7 +48,6 @@ class EncuentraDiferenciasDificilViewModel : ViewModel() {
         Offset(0.64147055f, 0.68753684f)
     )
 
-
     val isCompleted: Boolean
         get() = _foundDifferences.value.size == differences.size
 
@@ -45,6 +56,11 @@ class EncuentraDiferenciasDificilViewModel : ViewModel() {
             while (!isCompleted) {
                 delay(1000L)
                 _elapsedTime.update { it + 1 }
+            }
+
+            if (isCompleted && !resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
             }
         }
     }
@@ -70,9 +86,27 @@ class EncuentraDiferenciasDificilViewModel : ViewModel() {
                 val dist = kotlin.math.hypot(dx, dy)
                 if (dist < radius) {
                     _foundDifferences.update { it + diff }
+
+                    if (isCompleted && !resultadoGuardado) {
+                        guardarResultadoFinal()
+                        resultadoGuardado = true
+                    }
+
                     return
                 }
             }
+        }
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "EncuentraDiferencias_$dificultad",
+                tiempoEnSegundos = _elapsedTime.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
         }
     }
 }

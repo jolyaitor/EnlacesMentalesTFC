@@ -1,53 +1,49 @@
 package com.example.enlacesmentales.ui.screens.juegos.semanticos
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CamposSemanticosViewModel : ViewModel() {
+@HiltViewModel
+class CamposSemanticosViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
 
-    // Lista de categorías visibles
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var resultadoGuardado = false
+
     val categorias = MutableStateFlow(listOf("Animales", "Objetos"))
 
-    // Palabras originales con sus categorías
     val palabrasOriginales = listOf(
-        "Gato" to "Animales",
-        "Perro" to "Animales",
-        "León" to "Animales",
-        "Mesa" to "Objetos",
-        "Silla" to "Objetos",
-        "Elefante" to "Animales",
-        "Vaso" to "Objetos",
-        "Tigre" to "Animales",
-        "Cuchara" to "Objetos",
+        "Gato" to "Animales", "Perro" to "Animales", "León" to "Animales",
+        "Mesa" to "Objetos", "Silla" to "Objetos", "Elefante" to "Animales",
+        "Vaso" to "Objetos", "Tigre" to "Animales", "Cuchara" to "Objetos",
         "Caballo" to "Animales"
     )
 
-    // Palabras aún no clasificadas
     private val _palabras = MutableStateFlow(palabrasOriginales.map { it.first })
     val palabras: StateFlow<List<String>> = _palabras
 
-    // Palabras mal colocadas para animación de vibración
     private val _palabrasFallidas = MutableStateFlow(setOf<String>())
     val palabrasFallidas: StateFlow<Set<String>> = _palabrasFallidas
 
-    // Palabras clasificadas por categoría
     private val _matchedWords = MutableStateFlow(
         categorias.value.associateWith { mutableListOf<String>() }
     )
     val matchedWords: StateFlow<Map<String, List<String>>> = _matchedWords
 
-    // Temporizador en segundos
     private val _tiempo = MutableStateFlow(0)
     val tiempo: StateFlow<Int> = _tiempo
 
-    // Control del tiempo
     private var contadorJob: Job? = null
 
-    // Estado de finalización
     val isCompleted: StateFlow<Boolean> = _matchedWords
         .map { it.values.sumOf { lista -> lista.size } == palabrasOriginales.size }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -79,6 +75,18 @@ class CamposSemanticosViewModel : ViewModel() {
                 _palabrasFallidas.update { it - palabra }
             }
         }
+
+        // Verificar si se completó el juego
+        checkCompletion()
+    }
+
+    private fun checkCompletion() {
+        val total = palabrasOriginales.size
+        val clasificadas = _matchedWords.value.values.sumOf { it.size }
+        if (clasificadas == total && !resultadoGuardado) {
+            resultadoGuardado = true
+            guardarResultadoFinal()
+        }
     }
 
     fun reset() {
@@ -86,6 +94,7 @@ class CamposSemanticosViewModel : ViewModel() {
         _palabrasFallidas.value = emptySet()
         _matchedWords.value = categorias.value.associateWith { mutableListOf() }
         _tiempo.value = 0
+        resultadoGuardado = false
         iniciarContador()
     }
 
@@ -96,11 +105,20 @@ class CamposSemanticosViewModel : ViewModel() {
                 delay(1000)
                 _tiempo.update { it + 1 }
 
-                // Detener el contador si se completa
-                if (_matchedWords.value.values.sumOf { it.size } == palabrasOriginales.size) {
-                    break
-                }
+                if (_matchedWords.value.values.sumOf { it.size } == palabrasOriginales.size) break
             }
+        }
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "CamposSemanticos_$dificultad",
+                tiempoEnSegundos = _tiempo.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
         }
     }
 }

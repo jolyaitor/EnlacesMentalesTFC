@@ -1,12 +1,17 @@
 package com.example.enlacesmentales.ui.screens.juegos.cartas.dificil
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class Carta(
     val id: Int,
@@ -15,7 +20,13 @@ data class Carta(
     val esPareja: Boolean = false
 )
 
-class MemoriaDificilViewModel : ViewModel() {
+@HiltViewModel
+class MemoriaDificilViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle, private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "dificil"
+    private var resultadoGuardado = false
 
     private val emojis = listOf("🐶", "🐱", "🦊", "🐰", "🐼", "🐸")
 
@@ -47,6 +58,10 @@ class MemoriaDificilViewModel : ViewModel() {
             while (!_completado.value) {
                 delay(1000)
                 _tiempo.update { it + 1 }
+            }
+            if (!resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
             }
         }
     }
@@ -89,6 +104,18 @@ class MemoriaDificilViewModel : ViewModel() {
                     _completado.value = true
                 }
             }
+        }
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "Memoria_$dificultad",
+                tiempoEnSegundos = _tiempo.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
         }
     }
 }

@@ -5,13 +5,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.SavedStateHandle
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class EncuentraDiferenciasViewModel : ViewModel() {
+@HiltViewModel
+class EncuentraDiferenciasViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var resultadoGuardado = false
 
     private val _foundDifferences = MutableStateFlow<List<Offset>>(emptyList())
     val foundDifferences: StateFlow<List<Offset>> = _foundDifferences
@@ -37,6 +49,10 @@ class EncuentraDiferenciasViewModel : ViewModel() {
                 delay(1000L)
                 _elapsedTime.update { it + 1 }
             }
+            if (!resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
+            }
         }
     }
 
@@ -61,9 +77,27 @@ class EncuentraDiferenciasViewModel : ViewModel() {
                 val dist = kotlin.math.hypot(dx, dy)
                 if (dist < radius) {
                     _foundDifferences.update { it + diff }
+
+                    if (isCompleted && !resultadoGuardado) {
+                        guardarResultadoFinal()
+                        resultadoGuardado = true
+                    }
+
                     return
                 }
             }
+        }
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "EncuentraDiferencias_$dificultad",
+                tiempoEnSegundos = _elapsedTime.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
         }
     }
 }

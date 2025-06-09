@@ -1,6 +1,7 @@
 package com.example.enlacesmentales.data.remote
 
 
+import com.example.enlacesmentales.data.model.GameResult
 import com.example.enlacesmentales.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -17,5 +18,15 @@ class FirebaseFirestoreService @Inject constructor(
 
     suspend fun getUser(uid: String): User? {
         return usersCollection.document(uid).get().await().toObject(User::class.java)
+    }
+
+    suspend fun saveGameResult(userId: String, result: GameResult) {
+        firestore.collection("usuarios")
+            .document(userId)
+            .collection("progreso")
+            .document(result.gameName)
+            .collection("registros")
+            .add(result)
+            .await()
     }
 }

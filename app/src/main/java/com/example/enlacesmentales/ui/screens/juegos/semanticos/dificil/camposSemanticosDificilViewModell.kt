@@ -1,15 +1,24 @@
 package com.example.enlacesmentales.ui.screens.juegos.semanticos.dificil
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.data.repository.ProgresoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CamposSemanticosDificilViewModel : ViewModel() {
+@HiltViewModel
+class CamposSemanticosDificilViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val progresoRepository: ProgresoRepository
+) : ViewModel() {
+
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var resultadoGuardado = false
 
     private val categoriasList = listOf("Objetos", "Trabajos", "Asignaturas")
 
@@ -18,28 +27,14 @@ class CamposSemanticosDificilViewModel : ViewModel() {
 
     private val palabrasOriginales = listOf(
         // Objetos
-        "Silla" to "Objetos",
-        "Mesa" to "Objetos",
-        "Vaso" to "Objetos",
-        "Lápiz" to "Objetos",
-        "Portátil" to "Objetos",
-        "Teléfono" to "Objetos",
-
+        "Silla" to "Objetos", "Mesa" to "Objetos", "Vaso" to "Objetos",
+        "Lápiz" to "Objetos", "Portátil" to "Objetos", "Teléfono" to "Objetos",
         // Trabajos
-        "Médico" to "Trabajos",
-        "Profesor" to "Trabajos",
-        "Bombero" to "Trabajos",
-        "Ingeniero" to "Trabajos",
-        "Cocinero" to "Trabajos",
-        "Abogado" to "Trabajos",
-
+        "Médico" to "Trabajos", "Profesor" to "Trabajos", "Bombero" to "Trabajos",
+        "Ingeniero" to "Trabajos", "Cocinero" to "Trabajos", "Abogado" to "Trabajos",
         // Asignaturas
-        "Matemáticas" to "Asignaturas",
-        "Historia" to "Asignaturas",
-        "Ciencias" to "Asignaturas",
-        "Física" to "Asignaturas",
-        "Lengua" to "Asignaturas",
-        "Inglés" to "Asignaturas"
+        "Matemáticas" to "Asignaturas", "Historia" to "Asignaturas", "Ciencias" to "Asignaturas",
+        "Física" to "Asignaturas", "Lengua" to "Asignaturas", "Inglés" to "Asignaturas"
     )
 
     private val _palabras = MutableStateFlow(palabrasOriginales.map { it.first }.shuffled())
@@ -89,7 +84,13 @@ class CamposSemanticosDificilViewModel : ViewModel() {
         val total = palabrasOriginales.size
         val classified = _matchedWords.value.values.sumOf { it.size }
         _isCompleted.value = classified == total
-        if (_isCompleted.value) stopTimer()
+        if (_isCompleted.value) {
+            stopTimer()
+            if (!resultadoGuardado) {
+                guardarResultadoFinal()
+                resultadoGuardado = true
+            }
+        }
     }
 
     fun reset() {
@@ -99,6 +100,7 @@ class CamposSemanticosDificilViewModel : ViewModel() {
         _palabrasFallidas.value = emptySet()
         _tiempo.value = 0
         _isCompleted.value = false
+        resultadoGuardado = false
         timerRunning = true
         startTimer()
     }
@@ -114,5 +116,17 @@ class CamposSemanticosDificilViewModel : ViewModel() {
 
     private fun stopTimer() {
         timerRunning = false
+    }
+
+    private fun guardarResultadoFinal() {
+        viewModelScope.launch {
+            val result = GameResult(
+                gameName = "CamposSemanticos_$dificultad",
+                tiempoEnSegundos = _tiempo.value,
+                dificultad = dificultad,
+                timeStamp = System.currentTimeMillis()
+            )
+            progresoRepository.guardarResultadoJuego(result)
+        }
     }
 }

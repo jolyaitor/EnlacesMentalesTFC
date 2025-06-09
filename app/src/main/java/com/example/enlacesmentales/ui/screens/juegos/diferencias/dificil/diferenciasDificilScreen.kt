@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.R
+import com.example.enlacesmentales.data.model.GameResult
 
 @Composable
 fun EncuentraLasDiferenciasDificilScreen(
@@ -36,6 +37,7 @@ fun EncuentraLasDiferenciasDificilScreen(
     val imageSize by viewModel.imageSize.collectAsState()
     val isCompleted = foundDifferences.size == viewModel.differences.size
     val remaining = viewModel.differences.size - foundDifferences.size
+
 
     Column(
         modifier = Modifier
@@ -130,3 +132,4 @@ fun EncuentraLasDiferenciasDificilScreen(
         }
     }
 }
+

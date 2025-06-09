@@ -16,24 +16,31 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.ui.components.BottomNavigationBar
 import com.example.enlacesmentales.ui.components.TopBar
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.*
+
 import androidx.compose.ui.viewinterop.AndroidView
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 
 @Composable
 fun ProgresoScreen(navController: NavController) {
     val viewModel: ProgresoViewModel = hiltViewModel()
-    val entries by viewModel.progresoEntries.collectAsState()
+    val juegos by viewModel.juegosDisponibles.collectAsState()
+    val resultadosFacil by viewModel.resultadosFacil.collectAsState()
+    val resultadosDificil by viewModel.resultadosDificil.collectAsState()
     val context = LocalContext.current
+
+    var juegoSeleccionado by remember { mutableStateOf<String?>(null) }
+    var mostrarFacil by remember { mutableStateOf(true) }
+    var mostrarDificil by remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopBar(
                 onUserClick = { navController.navigate("ajustes_usuario") },
-                onSettingsClick = { /* Acción para ajustes */ }
+                onSettingsClick = { /* Acción ajustes */ }
             )
         },
         bottomBar = {
@@ -44,15 +51,51 @@ fun ProgresoScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(color = MaterialTheme.colorScheme.background),
+                .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             Text("PROGRESO", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
+            Box(modifier = Modifier.padding(16.dp)) {
+                TextButton(onClick = { expanded = true }) {
+                    Text(juegoSeleccionado ?: "Selecciona un juego")
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    juegos.forEach { juego ->
+                        DropdownMenuItem(
+                            text = { Text(juego) },
+                            onClick = {
+                                juegoSeleccionado = juego
+                                expanded = false
+                                viewModel.cargarProgresoDeJuego(juego)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(checked = mostrarFacil, onCheckedChange = { mostrarFacil = it })
+                Text("Fácil", modifier = Modifier.padding(end = 16.dp))
+                Switch(checked = mostrarDificil, onCheckedChange = { mostrarDificil = it })
+                Text("Difícil")
+            }
+
             AndroidView(
-                factory = { createLineChart(context, entries) },
+                factory = {
+                    createLineChart(
+                        context,
+                        mostrarFacil,
+                        mostrarDificil,
+                        resultadosFacil,
+                        resultadosDificil
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
@@ -61,7 +104,7 @@ fun ProgresoScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "EXPLICACIÓN DEL AVANCE QUE TIENE EL ALUMNO",
+                "EXPLICACIÓN DEL AVANCE QUE TIENE EL ALUMNO",
                 fontSize = 14.sp,
                 modifier = Modifier.padding(16.dp)
             )
@@ -69,23 +112,40 @@ fun ProgresoScreen(navController: NavController) {
     }
 }
 
-private fun createLineChart(context: Context, entries: List<Entry>): LineChart {
+private fun createLineChart(
+    context: Context,
+    mostrarFacil: Boolean,
+    mostrarDificil: Boolean,
+    datosFacil: List<Entry>,
+    datosDificil: List<Entry>
+): LineChart {
     val chart = LineChart(context)
+    val lineDataSets = mutableListOf<ILineDataSet>()
 
-    val dataSet = LineDataSet(entries, "Progreso")
-    dataSet.color = Color.BLUE
-    dataSet.valueTextColor = Color.BLACK
-    dataSet.setDrawCircles(true)
-    dataSet.setDrawValues(false)
+    if (mostrarFacil && datosFacil.isNotEmpty()) {
+        val dataSetFacil = LineDataSet(datosFacil, "Fácil").apply {
+            color = Color.GREEN
+            setDrawCircles(true)
+            setDrawValues(false)
+        }
+        lineDataSets.add(dataSetFacil)
+    }
 
-    val lineData = LineData(dataSet)
-    chart.data = lineData
+    if (mostrarDificil && datosDificil.isNotEmpty()) {
+        val dataSetDificil = LineDataSet(datosDificil, "Difícil").apply {
+            color = Color.RED
+            setDrawCircles(true)
+            setDrawValues(false)
+        }
+        lineDataSets.add(dataSetDificil)
+    }
 
+    chart.data = LineData(lineDataSets)
     chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
     chart.axisRight.isEnabled = false
     chart.description.isEnabled = false
-    chart.setBackgroundColor(android.graphics.Color.WHITE)
-
+    chart.setBackgroundColor(Color.WHITE)
     chart.invalidate()
+
     return chart
 }
