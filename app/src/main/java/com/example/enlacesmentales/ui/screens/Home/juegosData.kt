@@ -27,6 +27,6 @@ val juegos = listOf(
         "Encuentra el objeto",
         "Encuentra los objetos en la imagen en el menor tiempo posible",
         iconoResId = R.drawable.encuentra_objeto,
-        "resolucion"
+        rutaNavegacion = Screen.Objetos.route
     )
 )

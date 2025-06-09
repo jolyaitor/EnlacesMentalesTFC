@@ -17,6 +17,7 @@ import com.example.enlacesmentales.ui.screens.juegos.EncuentraLasDiferenciasScre
 import com.example.enlacesmentales.ui.screens.juegos.cartas.dificil.MemoriaDificilScreen
 import com.example.enlacesmentales.ui.screens.juegos.cartas.facil.MemoriaScreen
 import com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil.EncuentraLasDiferenciasDificilScreen
+import com.example.enlacesmentales.ui.screens.juegos.encuentrapersonaje.EncuentraPersonajeScreen
 import com.example.enlacesmentales.ui.screens.juegos.semanticos.CamposSemanticosScreen
 import com.example.enlacesmentales.ui.screens.juegos.semanticos.dificil.CamposSemanticosDificilScreen
 
@@ -30,6 +31,7 @@ sealed class Screen(val route: String) {
     object ForgotPassword : Screen("forgotpassword")
     object Diferencias : Screen("diferencias")
     object CamposSemanticos : Screen("campos_semanticos")
+    object Objetos : Screen("objetos")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -84,6 +86,15 @@ fun AppNavGraph(navController: NavHostController) {
                 CamposSemanticosScreen(navController)
             }
         }
-
+        composable(
+            route = "objetos?dificultad={dificultad}"
+        ) { backStackEntry ->
+            val dificultad = backStackEntry.arguments?.getString("dificultad") ?: "facil"
+            if (dificultad == "dificil") {
+                EncuentraPersonajeScreen(navController)
+            } else {
+                EncuentraPersonajeScreen(navController)
+            }
+        }
     }
 }
