@@ -18,6 +18,7 @@ import com.example.enlacesmentales.ui.screens.juegos.cartas.dificil.MemoriaDific
 import com.example.enlacesmentales.ui.screens.juegos.cartas.facil.MemoriaScreen
 import com.example.enlacesmentales.ui.screens.juegos.diferencias.dificil.EncuentraLasDiferenciasDificilScreen
 import com.example.enlacesmentales.ui.screens.juegos.semanticos.CamposSemanticosScreen
+import com.example.enlacesmentales.ui.screens.juegos.semanticos.dificil.CamposSemanticosDificilScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -78,7 +79,7 @@ fun AppNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val dificultad = backStackEntry.arguments?.getString("dificultad") ?: "facil"
             if (dificultad == "dificil") {
-                CamposSemanticosScreen(navController)
+                CamposSemanticosDificilScreen(navController)
             } else {
                 CamposSemanticosScreen(navController)
             }
