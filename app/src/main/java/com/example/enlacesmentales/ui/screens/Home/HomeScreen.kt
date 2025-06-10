@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,33 +65,40 @@ fun HomeScreen(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
+
         Column(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(16.dp))
+
             Text(
                 text = "JUEGOS",
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             )
-            Spacer(Modifier.height(24.dp))
+
+            Spacer(Modifier.height(8.dp))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f), // ✅ Ahora sí funciona correctamente
+                verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(16.dp)
             ) {
                 items(juegos) { juego ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
+                            .height(300.dp) // 👈 sustituye .aspectRatio(1f)
                             .clickable { juegoSeleccionado = juego },
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6)),
                         elevation = CardDefaults.cardElevation(6.dp),
@@ -103,6 +111,7 @@ fun HomeScreen(
                             Image(
                                 painter = painterResource(id = juego.iconoResId),
                                 contentDescription = juego.titulo,
+                                contentScale = ContentScale.Fit,
                                 modifier = Modifier.size(64.dp)
                             )
                         }
@@ -110,6 +119,7 @@ fun HomeScreen(
                 }
             }
         }
+
 
         // Diálogo de selección de juego (igual que antes)
         juegoSeleccionado?.let { juego ->
@@ -141,6 +151,7 @@ fun HomeScreen(
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
                     }
+
                     else -> Unit
                 }
             }

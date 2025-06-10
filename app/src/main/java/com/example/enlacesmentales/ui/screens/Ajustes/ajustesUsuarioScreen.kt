@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.collectLatest
 
+
 @Composable
 fun AjustesUsuarioScreen(
     navController: NavController,
@@ -35,15 +36,11 @@ fun AjustesUsuarioScreen(
     var currentPassVisible by remember { mutableStateOf(false) }
     var newPassVisible by remember { mutableStateOf(false) }
     var repeatPassVisible by remember { mutableStateOf(false) }
-    var showConfirmDialog by remember { mutableStateOf(false) }
-
-    var shouldLogout by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
                 is AjustesViewModel.UIEvent.ShowError -> {
-                    shouldLogout = false // Bloquea redirección si hubo error
                     snackbarHostState.showSnackbar(event.message)
                 }
 
@@ -52,7 +49,6 @@ fun AjustesUsuarioScreen(
                 }
 
                 is AjustesViewModel.UIEvent.Logout -> {
-                    shouldLogout = true
                     navController.navigate("login") {
                         popUpTo(0)
                     }
@@ -62,8 +58,7 @@ fun AjustesUsuarioScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -72,7 +67,7 @@ fun AjustesUsuarioScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // Top Buttons
+            // Botones superiores
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -97,7 +92,6 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Title
             Text(
                 text = "Ajustes de usuario",
                 fontSize = 28.sp,
@@ -107,7 +101,7 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Name Section
+            // Nombre
             Text(
                 "Cambiar nombre de usuario:",
                 fontWeight = FontWeight.SemiBold,
@@ -122,23 +116,7 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Email Section
-            Text(
-                "Cambiar correo electrónico:",
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Start)
-            )
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = viewModel::onEmailChange,
-                placeholder = { Text("Nuevo correo:") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Current Password Section
+            // Contraseña actual
             Text(
                 "Contraseña actual:",
                 fontWeight = FontWeight.SemiBold,
@@ -161,7 +139,7 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // New Password Section
+            // Nueva contraseña
             Text(
                 "Nueva contraseña:",
                 fontWeight = FontWeight.SemiBold,
@@ -184,7 +162,7 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Repeat Password Section
+            // Repetir contraseña
             Text(
                 "Repetir nueva contraseña:",
                 fontWeight = FontWeight.SemiBold,
@@ -207,52 +185,33 @@ fun AjustesUsuarioScreen(
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            // Accept Button
+
+            val isFormValid = uiState.name.isNotBlank() &&
+                    uiState.currentPassword.isNotBlank() &&
+                    (uiState.password == uiState.repeatPassword)
+
+            // Botón Aceptar
             Button(
-                onClick = {
-                    showConfirmDialog = true
-                },
+                onClick = { viewModel.onSaveClick() },
+                enabled = isFormValid,
                 modifier = Modifier
                     .width(180.dp)
                     .align(Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isFormValid) Color(0xFF64B5F6) else Color.Gray
+                ),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
                 Text("Aceptar", color = Color.White)
             }
-
-            if (showConfirmDialog) {
-                AlertDialog(
-                    onDismissRequest = { showConfirmDialog = false },
-                    title = { Text("Confirmar cambio de correo") },
-                    text = {
-                        Text("¿Estás seguro de que tienes acceso al nuevo correo '${uiState.email}'? Si no puedes verificarlo, podrías perder acceso a tu cuenta.")
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showConfirmDialog = false
-                            viewModel.onSaveClick()
-                        }) {
-                            Text("Sí, continuar")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            showConfirmDialog = false
-                        }) {
-                            Text("Cancelar")
-                        }
-                    }
-                )
-            }
-
         }
 
-        // Snackbar
+        // Snackbar de feedback
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
+

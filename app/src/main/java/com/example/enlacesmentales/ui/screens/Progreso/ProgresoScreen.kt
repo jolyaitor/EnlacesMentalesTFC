@@ -39,6 +39,8 @@ fun ProgresoScreen(
     val juegos by viewModel.juegosDisponibles.collectAsState()
     val resultadosFacil by viewModel.resultadosFacil.collectAsState()
     val resultadosDificil by viewModel.resultadosDificil.collectAsState()
+    val explicacionFacil by viewModel.explicacionFacil.collectAsState()
+    val explicacionDificil by viewModel.explicacionDificil.collectAsState()
     val context = LocalContext.current
 
     var juegoSeleccionado by remember { mutableStateOf<String?>(null) }
@@ -164,11 +166,25 @@ fun ProgresoScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                "🛠 DEBUG:",
-                style = MaterialTheme.typography.titleSmall,
-                color = ComposeColor.Gray
-            )
+
+            if (mostrarFacil && explicacionFacil.isNotBlank()) {
+                Text(
+                    text = "Modo Fácil: $explicacionFacil",
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    fontSize = 14.sp
+                )
+            }
+
+            if (mostrarDificil && explicacionDificil.isNotBlank()) {
+                Text(
+                    text = "Modo Difícil: $explicacionDificil",
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    fontSize = 14.sp
+                )
+            }
+
             Text(
                 text = if (juegos.isEmpty()) "No se encontraron juegos"
                 else "Juegos: ${juegos.joinToString()}",
@@ -281,8 +297,10 @@ private fun createLineChart(
     chart.setPinchZoom(true)
     chart.setBackgroundColor(Color.WHITE)
     chart.legend.isEnabled = true
-
+    chart.data.notifyDataChanged()
+    chart.notifyDataSetChanged()
     chart.invalidate()
+
     return chart
 }
 

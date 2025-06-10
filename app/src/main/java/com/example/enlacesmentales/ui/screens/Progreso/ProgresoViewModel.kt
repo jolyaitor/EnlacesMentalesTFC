@@ -19,6 +19,11 @@ class ProgresoViewModel @Inject constructor() : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val _explicacionFacil = MutableStateFlow("")
+    val explicacionFacil: StateFlow<String> = _explicacionFacil
+
+    private val _explicacionDificil = MutableStateFlow("")
+    val explicacionDificil: StateFlow<String> = _explicacionDificil
 
     private val _resultadosFacil = MutableStateFlow<List<Entry>>(emptyList())
     val resultadosFacil: StateFlow<List<Entry>> = _resultadosFacil
@@ -79,10 +84,9 @@ class ProgresoViewModel @Inject constructor() : ViewModel() {
                 sortedDocs.forEachIndexed { index, doc ->
                     val dificultad = doc.getString("dificultad") ?: "facil"
                     val tiempo = doc.getLong("tiempoEnSegundos")?.toFloat() ?: return@forEachIndexed
-                    val fecha = doc.getLong("timeStamp") ?: return@forEachIndexed
-                    Log.d("FECHA_REGISTRO", "timestamp: $fecha → ${Date(fecha)}")
+                    val fechaBase = sortedDocs.firstOrNull()?.getLong("timeStamp") ?: 0L
                     val fechaAjustada =
-                        fecha + index * 60_000  // Aumenta 1 min por punto // Simula separación si los timestamps son iguales
+                        fechaBase + index * 120_000  // fuerza separación regular entre puntos
                     val entry = Entry(fechaAjustada.toFloat(), tiempo)
 
 
@@ -94,12 +98,14 @@ class ProgresoViewModel @Inject constructor() : ViewModel() {
 
                     Log.d(
                         "DEBUG_REGISTRO",
-                        "[$index] dificultad: $dificultad, tiempo: $tiempo, fecha: $fecha"
+                        "[$index] dificultad: $dificultad, tiempo: $tiempo, fecha: $fechaAjustada"
                     )
                 }
 
                 _resultadosFacil.value = facil
                 _resultadosDificil.value = dificil
+                _explicacionFacil.value = generarTextoExplicativo(facil)
+                _explicacionDificil.value = generarTextoExplicativo(dificil)
                 Log.d("DEBUG_ENTRIES", "Facil: ${facil.size}, Dificil: ${dificil.size}")
             }
             .addOnFailureListener {
@@ -118,5 +124,25 @@ class ProgresoViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
+
+    private fun generarTextoExplicativo(entries: List<Entry>): String {
+        if (entries.size < 2) {
+            return "No se ha jugado a este juego o solo hay un intento registrado. Se necesita más información para evaluar el progreso."
+        }
+
+        val sorted = entries.sortedBy { it.x }
+        val anterior = sorted[sorted.size - 2].y
+        val actual = sorted.last().y
+        val diferencia = actual - anterior
+
+        return when {
+            diferencia < 0 -> "Se observan mejoras en el desempeño del alumno respecto al intento anterior."
+            diferencia in 1f..8f -> "El alumno pareció perder algo de concentración en este intento."
+            diferencia in 9f..14f -> "El alumno mostró signos de distracción durante la actividad."
+            diferencia >= 15f -> "El alumno está teniendo dificultades para completar la tarea."
+            else -> "No hubo cambios significativos en el rendimiento."
+        }
+    }
+
 }
 
