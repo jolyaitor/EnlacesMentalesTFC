@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 
 @Composable
 fun MemoriaScreen(
@@ -24,13 +25,22 @@ fun MemoriaScreen(
     val totalParejas = cards.size / 2
     val parejasEncontradas = cards.count { it.isMatched } / 2
 
+    // Estado para mostrar el diálogo
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
+
+    // Mostrar diálogo si el juego se completa
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            showGameFinishedDialog = true
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Botón salir arriba derecha
+        // Botón salir
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
             Button(onClick = { navController.popBackStack() }) {
                 Text("Salir")
@@ -73,9 +83,8 @@ fun MemoriaScreen(
                                     .padding(8.dp)
                                     .clickable { viewModel.onCardClicked(index) },
                                 colors = CardDefaults.cardColors(
-                                    containerColor = if (card.isMatched || card.isFaceUp) Color.White else Color(
-                                        0xFFEDE7F6
-                                    )
+                                    containerColor = if (card.isMatched || card.isFaceUp)
+                                        Color.White else Color(0xFFEDE7F6)
                                 )
                             ) {
                                 Box(
@@ -95,7 +104,6 @@ fun MemoriaScreen(
             }
         }
 
-        // NUEVO: Mostrar parejas encontradas
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Parejas encontradas: $parejasEncontradas / $totalParejas",
@@ -103,18 +111,16 @@ fun MemoriaScreen(
             color = Color.DarkGray,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+    }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (isCompleted) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "¡Felicidades! Has completado el juego 🎉",
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF4CAF50), // Verde
-                fontSize = 18.sp
-            )
-        }
+    // Mostrar diálogo al completar el juego
+    if (showGameFinishedDialog) {
+        GameFinishedDialog(
+            timeTaken = "${elapsedTime}s",
+            onDismiss = {
+                showGameFinishedDialog = false
+                navController.popBackStack()
+            }
+        )
     }
 }
-

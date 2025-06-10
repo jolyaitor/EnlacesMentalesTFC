@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.R
-import com.example.enlacesmentales.data.model.GameResult
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 
 @Composable
 fun EncuentraLasDiferenciasDificilScreen(
@@ -38,6 +38,15 @@ fun EncuentraLasDiferenciasDificilScreen(
     val isCompleted = foundDifferences.size == viewModel.differences.size
     val remaining = viewModel.differences.size - foundDifferences.size
 
+    // Estado para mostrar el diálogo
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
+
+    // Mostrar diálogo solo una vez al completar el juego
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            showGameFinishedDialog = true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -131,5 +140,15 @@ fun EncuentraLasDiferenciasDificilScreen(
             }
         }
     }
-}
 
+    // Mostrar diálogo al completar el juego
+    if (showGameFinishedDialog) {
+        GameFinishedDialog(
+            timeTaken = "${elapsedTime}s",
+            onDismiss = {
+                showGameFinishedDialog = false
+                navController.popBackStack()
+            }
+        )
+    }
+}

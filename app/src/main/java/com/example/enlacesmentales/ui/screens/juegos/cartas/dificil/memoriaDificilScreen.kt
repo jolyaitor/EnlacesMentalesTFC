@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 
 private val animalEmojis = listOf(
     "🐶", "🐱", "🐭", "🐹", "🐰", "🦊",
@@ -27,6 +28,7 @@ fun MemoriaDificilScreen(
     val cartas by viewModel.cartas.collectAsState()
     val tiempo by viewModel.tiempo.collectAsState()
     val completado by viewModel.completado.collectAsState()
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
 
     val totalParejas = cartas.size / 2
     val parejasEncontradas = cartas.count { it.esPareja } / 2
@@ -106,13 +108,20 @@ fun MemoriaDificilScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (completado) {
-            Text(
-                "¡Felicidades! Has encontrado todas las parejas 🎉",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF4CAF50)
+
+        if (completado && !showGameFinishedDialog) {
+            showGameFinishedDialog = true
+        }
+
+        if (showGameFinishedDialog) {
+            GameFinishedDialog(
+                timeTaken = "1 minuto y 30 segundos",
+                onDismiss = {
+                    showGameFinishedDialog = false
+                    navController.popBackStack()
+                }
             )
         }
+
     }
 }

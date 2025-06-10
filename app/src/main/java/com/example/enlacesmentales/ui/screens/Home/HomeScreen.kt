@@ -26,6 +26,9 @@ import com.example.enlacesmentales.ui.components.BottomNavigationBar
 import com.example.enlacesmentales.ui.components.GameSelectionDialog
 import com.example.enlacesmentales.ui.components.TopBar
 import kotlinx.coroutines.flow.collectLatest
+import com.example.enlacesmentales.ui.components.AccountOptionsDialog
+import com.example.enlacesmentales.ui.components.DeleteAccountConfirmDialog
+
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -161,85 +164,4 @@ fun HomeScreen(
             )
         }
     }
-}
-
-/**
- * Diálogo con las tres opciones:
- *  - Cambiar correo electrónico
- *  - Cerrar sesión
- *  - Borrar cuenta
- */
-@Composable
-private fun AccountOptionsDialog(
-    onDismiss: () -> Unit,
-    onLogout: () -> Unit,
-    onDeleteAccount: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Ajustes de cuenta") },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Divider()
-                Text(
-                    text = "Cerrar sesión",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onLogout() }
-                        .padding(vertical = 12.dp),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Divider()
-                Text(
-                    text = "Borrar cuenta",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onDeleteAccount() }
-                        .padding(vertical = 12.dp),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        },
-        confirmButton = {},
-        dismissButton = {},
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .wrapContentHeight()
-    )
-}
-
-
-/**
- * Diálogo de confirmación para borrar la cuenta.
- */
-@Composable
-private fun DeleteAccountConfirmDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Borrar cuenta") },
-        text = {
-            Text(
-                "¿Estás seguro de que deseas borrar tu cuenta? " +
-                        "Esta acción no se puede deshacer.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Eliminar", color = MaterialTheme.colorScheme.error)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier.fillMaxWidth(0.9f)
-    )
 }

@@ -21,11 +21,17 @@ class FirebaseFirestoreService @Inject constructor(
     }
 
     suspend fun saveGameResult(userId: String, result: GameResult) {
-        firestore.collection("usuarios")
+        val gameDocRef = firestore.collection("usuarios")
             .document(userId)
             .collection("progreso")
             .document(result.gameName)
-            .collection("registros")
+        // Asegura que el documento del juego exista con un campo placeholder
+        gameDocRef.set(
+            mapOf("placeholder" to true),
+            com.google.firebase.firestore.SetOptions.merge()
+        ).await()
+        // Luego guarda el resultado en la subcolección "registros"
+        gameDocRef.collection("registros")
             .add(result)
             .await()
     }

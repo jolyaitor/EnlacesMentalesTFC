@@ -1,4 +1,3 @@
-// Screen - EncuentraLasDiferenciasScreen.kt
 package com.example.enlacesmentales.ui.screens.juegos
 
 import androidx.compose.foundation.Canvas
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.R
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 
 @Composable
 fun EncuentraLasDiferenciasScreen(
@@ -38,12 +38,23 @@ fun EncuentraLasDiferenciasScreen(
     val isCompleted = foundDifferences.size == viewModel.differences.size
     val remaining = viewModel.differences.size - foundDifferences.size
 
+    // ─────── ESTADO PARA MOSTRAR EL DIÁLOGO ───────
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
+
+    // Mostrar el diálogo solo una vez al completar el juego
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            showGameFinishedDialog = true
+        }
+    }
+
+    // ─────── UI PRINCIPAL ───────
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // ─────── BOTÓN DE SALIR ARRIBA A LA DERECHA ───────
+        // Botón de salir
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
             Button(onClick = { navController.popBackStack() }) {
                 Text("Salir")
@@ -129,5 +140,16 @@ fun EncuentraLasDiferenciasScreen(
                 Text("¡Felicidades! Encontraste todas 🎉", fontWeight = FontWeight.Bold)
             }
         }
+    }
+
+    // ─────── DIÁLOGO FINAL ───────
+    if (showGameFinishedDialog) {
+        GameFinishedDialog(
+            timeTaken = "${elapsedTime}s",
+            onDismiss = {
+                showGameFinishedDialog = false
+                navController.popBackStack()
+            }
+        )
     }
 }

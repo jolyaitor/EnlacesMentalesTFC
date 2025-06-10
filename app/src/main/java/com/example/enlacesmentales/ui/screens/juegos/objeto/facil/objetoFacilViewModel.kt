@@ -24,6 +24,7 @@ class EncuentraPersonajeViewModel @Inject constructor(
 
     private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
     private var resultadoGuardado = false
+    private var lastSavedTimestamp: Long? = null
 
     private val _objetivos = listOf(
         Personaje("Manu", Offset(0.026953313f, 0.3583053f)),
@@ -96,11 +97,17 @@ class EncuentraPersonajeViewModel @Inject constructor(
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTimestamp == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTimestamp = timestamp
+
             val result = GameResult(
-                gameName = "EncuentraObjeto_$dificultad",
+                gameName = "EncuentraObjeto",
                 tiempoEnSegundos = _tiempoTranscurrido.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }

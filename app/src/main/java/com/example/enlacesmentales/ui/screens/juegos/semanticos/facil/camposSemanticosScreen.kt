@@ -21,7 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 import kotlinx.coroutines.launch
+
+data class CategoriaBoxBounds(val categoria: String, val topLeft: Offset, val size: IntSize)
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -42,6 +45,15 @@ fun CamposSemanticosScreen(
 
     val scope = rememberCoroutineScope()
     val animatableOffset = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+
+    // Diálogo al completar
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isCompleted) {
+        if (isCompleted) {
+            showGameFinishedDialog = true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -87,13 +99,8 @@ fun CamposSemanticosScreen(
                         .onGloballyPositioned {
                             val position = it.positionInRoot()
                             val size = it.size
-                            val newBounds = CategoriaBoxBounds(
-                                categoria = categoria,
-                                topLeft = position,
-                                size = size
-                            )
-                            boxBounds.removeAll(boxBounds.filter { it.categoria == categoria }
-                                .toSet())
+                            val newBounds = CategoriaBoxBounds(categoria, position, size)
+                            boxBounds.removeAll { it.categoria == categoria }
                             boxBounds.add(newBounds)
                         },
                     contentAlignment = Alignment.Center
@@ -116,7 +123,6 @@ fun CamposSemanticosScreen(
         Column(modifier = Modifier.weight(1f)) {
             val palabrasClasificadas = matched.values.flatten().toSet()
 
-            // Renderizamos palabras no arrastradas
             FlowRow(
                 Modifier
                     .fillMaxWidth()
@@ -131,14 +137,10 @@ fun CamposSemanticosScreen(
                             isShaking = fallos.contains(word),
                             onDragStart = {
                                 draggingWord = word
-                                scope.launch {
-                                    animatableOffset.snapTo(Offset.Zero)
-                                }
+                                scope.launch { animatableOffset.snapTo(Offset.Zero) }
                             },
                             onDrag = { delta ->
-                                scope.launch {
-                                    animatableOffset.snapTo(animatableOffset.value + delta)
-                                }
+                                scope.launch { animatableOffset.snapTo(animatableOffset.value + delta) }
                             },
                             onDragEnd = {
                                 val position = wordPositions[word] ?: Offset.Zero
@@ -146,11 +148,11 @@ fun CamposSemanticosScreen(
                                     position + animatableOffset.value + Offset(40f, 20f)
 
                                 val matchedBox = boxBounds.find { bounds ->
-                                    val boxLeft = bounds.topLeft.x
-                                    val boxTop = bounds.topLeft.y
-                                    val boxRight = boxLeft + bounds.size.width
-                                    val boxBottom = boxTop + bounds.size.height
-                                    wordCenter.x in boxLeft..boxRight && wordCenter.y in boxTop..boxBottom
+                                    val left = bounds.topLeft.x
+                                    val top = bounds.topLeft.y
+                                    val right = left + bounds.size.width
+                                    val bottom = top + bounds.size.height
+                                    wordCenter.x in left..right && wordCenter.y in top..bottom
                                 }
 
                                 if (matchedBox != null) {
@@ -161,7 +163,6 @@ fun CamposSemanticosScreen(
                                         animatableOffset.animateTo(Offset.Zero, tween(300))
                                     }
                                 }
-
                                 draggingWord = null
                             },
                             onPositionMeasured = { pos -> wordPositions[word] = pos }
@@ -170,7 +171,6 @@ fun CamposSemanticosScreen(
                 }
             }
 
-// Renderizamos palabra actualmente arrastrada en top layer
             draggingWord?.let { word ->
                 DraggableWord(
                     word = word,
@@ -178,20 +178,18 @@ fun CamposSemanticosScreen(
                     isShaking = fallos.contains(word),
                     onDragStart = {},
                     onDrag = { delta ->
-                        scope.launch {
-                            animatableOffset.snapTo(animatableOffset.value + delta)
-                        }
+                        scope.launch { animatableOffset.snapTo(animatableOffset.value + delta) }
                     },
                     onDragEnd = {
                         val position = wordPositions[word] ?: Offset.Zero
                         val wordCenter = position + animatableOffset.value + Offset(40f, 20f)
 
                         val matchedBox = boxBounds.find { bounds ->
-                            val boxLeft = bounds.topLeft.x
-                            val boxTop = bounds.topLeft.y
-                            val boxRight = boxLeft + bounds.size.width
-                            val boxBottom = boxTop + bounds.size.height
-                            wordCenter.x in boxLeft..boxRight && wordCenter.y in boxTop..boxBottom
+                            val left = bounds.topLeft.x
+                            val top = bounds.topLeft.y
+                            val right = left + bounds.size.width
+                            val bottom = top + bounds.size.height
+                            wordCenter.x in left..right && wordCenter.y in top..bottom
                         }
 
                         if (matchedBox != null) {
@@ -202,36 +200,25 @@ fun CamposSemanticosScreen(
                                 animatableOffset.animateTo(Offset.Zero, tween(300))
                             }
                         }
-
                         draggingWord = null
                     },
                     onPositionMeasured = { pos -> wordPositions[word] = pos }
                 )
             }
-
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
 
-        if (isCompleted) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "¡Felicidades! Clasificaste todas las palabras 🎉",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF388E3C)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = { viewModel.reset() }) {
-                    Text("Jugar de nuevo")
-                }
+    // Mostrar GameFinishedDialog
+    if (showGameFinishedDialog) {
+        GameFinishedDialog(
+            timeTaken = "${tiempo}s",
+            onDismiss = {
+                showGameFinishedDialog = false
+                navController.popBackStack()
             }
-        }
+        )
     }
 }
 
@@ -249,26 +236,16 @@ fun DraggableWord(
     val shakeOffset by transition.animateFloat(
         initialValue = -4f,
         targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 50, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        animationSpec = infiniteRepeatable(tween(50, easing = LinearEasing), RepeatMode.Reverse),
         label = "shakeAnim"
     )
 
-    val animatedOffsetX = if (isShaking) shakeOffset else 0f
+    val offsetX = if (isShaking) shakeOffset else 0f
 
     Box(
         modifier = Modifier
-            .onGloballyPositioned {
-                onPositionMeasured(it.positionInRoot())
-            }
-            .offset {
-                IntOffset(
-                    (dragOffset.x + animatedOffsetX).toInt(),
-                    dragOffset.y.toInt()
-                )
-            }
+            .onGloballyPositioned { onPositionMeasured(it.positionInRoot()) }
+            .offset { IntOffset((dragOffset.x + offsetX).toInt(), dragOffset.y.toInt()) }
             .padding(8.dp)
             .background(Color.White, RoundedCornerShape(6.dp))
             .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
@@ -285,13 +262,6 @@ fun DraggableWord(
             .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = word,
-            fontSize = 18.sp,
-            color = if (isShaking) Color.Red else Color.Black
-        )
+        Text(text = word, fontSize = 18.sp, color = if (isShaking) Color.Red else Color.Black)
     }
 }
-
-// Data class for bounding boxes
-data class CategoriaBoxBounds(val categoria: String, val topLeft: Offset, val size: IntSize)

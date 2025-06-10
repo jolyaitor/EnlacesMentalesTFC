@@ -9,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.enlacesmentales.navigation.Screen
-import com.example.enlacesmentales.ui.screens.Progreso.ProgresoScreen
-import com.example.enlacesmentales.ui.screens.Progreso.ProgresoViewModel
 
 @Composable
 fun BottomNavigationBar(navController: NavController, currentRoute: String?) {

@@ -25,6 +25,9 @@ class MemoriaDificilViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle, private val progresoRepository: ProgresoRepository
 ) : ViewModel() {
 
+
+    private var lastSavedTime: Long? = null
+
     private val dificultad: String = savedStateHandle["dificultad"] ?: "dificil"
     private var resultadoGuardado = false
 
@@ -109,13 +112,22 @@ class MemoriaDificilViewModel @Inject constructor(
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+
+            // Evita timestamps duplicados si el usuario juega varias veces muy rápido
+            if (lastSavedTime == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTime = timestamp
+
             val result = GameResult(
-                gameName = "Memoria_$dificultad",
+                gameName = "Memoria",
                 tiempoEnSegundos = _tiempo.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }
     }
+
 }

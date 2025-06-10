@@ -28,6 +28,7 @@ class MemoriaViewModel @Inject constructor(
 
     private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
     private var resultadoGuardado = false
+    private var lastSavedTime: Long? = null
 
     private val _cards = MutableStateFlow(generateCards())
     val cards: StateFlow<List<MemoryCard>> = _cards
@@ -47,7 +48,7 @@ class MemoriaViewModel @Inject constructor(
                 _elapsedTime.update { it + 1 }
             }
 
-            if (!_isCompleted.value.not() && !resultadoGuardado) {
+            if (!resultadoGuardado) {
                 guardarResultadoFinal()
                 resultadoGuardado = true
             }
@@ -89,20 +90,22 @@ class MemoriaViewModel @Inject constructor(
 
         if (updatedCards.all { it.isMatched }) {
             _isCompleted.value = true
-            if (!resultadoGuardado) {
-                guardarResultadoFinal()
-                resultadoGuardado = true
-            }
         }
     }
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTime == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTime = timestamp
+
             val result = GameResult(
-                gameName = "Memoria_$dificultad",
+                gameName = "Memoria",
                 tiempoEnSegundos = _elapsedTime.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }

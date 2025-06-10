@@ -22,7 +22,9 @@ class EncuentraDiferenciasDificilViewModel @Inject constructor(
     private val progresoRepository: ProgresoRepository
 ) : ViewModel() {
 
-    private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private val dificultad: String = savedStateHandle["dificultad"] ?: "dificil"
+    private var resultadoGuardado = false
+    private var lastSavedTimestamp: Long? = null
 
     private val _foundDifferences = MutableStateFlow<List<Offset>>(emptyList())
     val foundDifferences: StateFlow<List<Offset>> = _foundDifferences
@@ -32,8 +34,6 @@ class EncuentraDiferenciasDificilViewModel @Inject constructor(
 
     private val _imageSize = MutableStateFlow(IntSize(1, 1))
     val imageSize: StateFlow<IntSize> = _imageSize
-
-    private var resultadoGuardado = false
 
     val differences = listOf(
         Offset(0.8804049f, 0.2534579f),
@@ -58,7 +58,7 @@ class EncuentraDiferenciasDificilViewModel @Inject constructor(
                 _elapsedTime.update { it + 1 }
             }
 
-            if (isCompleted && !resultadoGuardado) {
+            if (!resultadoGuardado) {
                 guardarResultadoFinal()
                 resultadoGuardado = true
             }
@@ -100,11 +100,17 @@ class EncuentraDiferenciasDificilViewModel @Inject constructor(
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTimestamp == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTimestamp = timestamp
+
             val result = GameResult(
-                gameName = "EncuentraDiferencias_$dificultad",
+                gameName = "EncuentraDiferencias",
                 tiempoEnSegundos = _elapsedTime.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }

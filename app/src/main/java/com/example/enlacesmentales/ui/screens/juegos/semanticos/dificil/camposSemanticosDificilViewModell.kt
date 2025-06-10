@@ -19,6 +19,7 @@ class CamposSemanticosDificilViewModel @Inject constructor(
 
     private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
     private var resultadoGuardado = false
+    private var lastSavedTimestamp: Long? = null
 
     private val categoriasList = listOf("Objetos", "Trabajos", "Asignaturas")
 
@@ -93,17 +94,6 @@ class CamposSemanticosDificilViewModel @Inject constructor(
         }
     }
 
-    fun reset() {
-        _palabras.value = palabrasOriginales.map { it.first }.shuffled()
-        _matchedWords.value =
-            categoriasList.associateWith { mutableListOf<String>() }.toMutableMap()
-        _palabrasFallidas.value = emptySet()
-        _tiempo.value = 0
-        _isCompleted.value = false
-        resultadoGuardado = false
-        timerRunning = true
-        startTimer()
-    }
 
     private fun startTimer() {
         viewModelScope.launch {
@@ -120,11 +110,17 @@ class CamposSemanticosDificilViewModel @Inject constructor(
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTimestamp == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTimestamp = timestamp
+
             val result = GameResult(
-                gameName = "CamposSemanticos_$dificultad",
+                gameName = "CamposSemanticos",
                 tiempoEnSegundos = _tiempo.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }

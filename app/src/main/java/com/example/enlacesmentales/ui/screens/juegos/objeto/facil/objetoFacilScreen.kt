@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.R
+import com.example.enlacesmentales.ui.components.GameFinishedDialog
 import androidx.compose.ui.draw.drawBehind
 
 @Composable
@@ -34,10 +34,18 @@ fun EncuentraPersonajeScreen(
 ) {
     val encontrados by viewModel.encontrados.collectAsState()
     val objetivos = viewModel.objetivos
-
     val tiempoTranscurrido by viewModel.tiempoTranscurrido.collectAsState()
-
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val juegoCompletado = viewModel.estanTodosEncontrados()
+    var showGameFinishedDialog by remember { mutableStateOf(false) }
+
+    // Mostrar el diálogo cuando el juego se completa
+    LaunchedEffect(juegoCompletado) {
+        if (juegoCompletado) {
+            showGameFinishedDialog = true
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -45,7 +53,7 @@ fun EncuentraPersonajeScreen(
             .background(Color.White)
             .padding(8.dp)
     ) {
-        // Botón de salir en la esquina superior derecha
+        // Botón de salir
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -57,7 +65,6 @@ fun EncuentraPersonajeScreen(
             }
         }
 
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,7 +73,7 @@ fun EncuentraPersonajeScreen(
         ) {
             Text(
                 text = "Encuentra los personajes ocultos",
-                fontSize = 24.sp, // o más si lo deseas
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
 
@@ -107,9 +114,7 @@ fun EncuentraPersonajeScreen(
                     contentDescription = "Imagen del juego",
                     modifier = Modifier
                         .fillMaxSize()
-                        .onSizeChanged { size ->
-                            imageSize = IntSize(size.width, size.height)
-                        }
+                        .onSizeChanged { size -> imageSize = size }
                 )
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -161,7 +166,7 @@ fun EncuentraPersonajeScreen(
                 }
             }
 
-            if (viewModel.estanTodosEncontrados()) {
+            if (juegoCompletado) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     "¡Todos encontrados! 🎉",
@@ -171,5 +176,16 @@ fun EncuentraPersonajeScreen(
                 )
             }
         }
+    }
+
+    // Mostrar el diálogo final
+    if (showGameFinishedDialog) {
+        GameFinishedDialog(
+            timeTaken = "${tiempoTranscurrido}s",
+            onDismiss = {
+                showGameFinishedDialog = false
+                navController.popBackStack()
+            }
+        )
     }
 }

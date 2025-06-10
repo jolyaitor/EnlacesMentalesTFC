@@ -18,6 +18,7 @@ class CamposSemanticosViewModel @Inject constructor(
 
     private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
     private var resultadoGuardado = false
+    private var lastSavedTimestamp: Long? = null
 
     val categorias = MutableStateFlow(listOf("Animales", "Objetos"))
 
@@ -76,7 +77,6 @@ class CamposSemanticosViewModel @Inject constructor(
             }
         }
 
-        // Verificar si se completó el juego
         checkCompletion()
     }
 
@@ -112,11 +112,17 @@ class CamposSemanticosViewModel @Inject constructor(
 
     private fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTimestamp == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTimestamp = timestamp
+
             val result = GameResult(
-                gameName = "CamposSemanticos_$dificultad",
+                gameName = "CamposSemanticos",
                 tiempoEnSegundos = _tiempo.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }

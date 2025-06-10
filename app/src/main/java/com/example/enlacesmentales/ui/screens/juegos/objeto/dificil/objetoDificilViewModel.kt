@@ -34,10 +34,11 @@ class EncuentraPersonajeDificilViewModel @Inject constructor(
         ObjetoDificil("Hacha", Offset(0.061626926f, 0.5230649f)),
         ObjetoDificil("Cofre", Offset(0.5173053f, 0.31064144f)),
         ObjetoDificil("Escudo", Offset(0.78608954f, 0.4522571f)),
-        ObjetoDificil("Botella", Offset(0.073184796f, 0.4840095f)),
+        ObjetoDificil("Botella", Offset(0.073184796f, 0.4840095f))
     )
 
     private val dificultad: String = savedStateHandle["dificultad"] ?: "facil"
+    private var lastSavedTimestamp: Long? = null
 
     val objetivos: List<ObjetoDificil> = _objetivos
 
@@ -57,9 +58,7 @@ class EncuentraPersonajeDificilViewModel @Inject constructor(
     }
 
     private fun iniciarTemporizador() {
-        // Asegúrate de cancelar cualquier temporizador anterior
         temporizadorJob?.cancel()
-
         temporizadorJob = viewModelScope.launch {
             while (_temporizadorActivo.value) {
                 delay(1000)
@@ -80,11 +79,14 @@ class EncuentraPersonajeDificilViewModel @Inject constructor(
     }
 
     fun verificarToque(normalizedOffset: Offset) {
-        val yaEncontrado =
-            _encontrados.value.any { it.posicion.distanceTo(normalizedOffset) < 0.03f }
+        val yaEncontrado = _encontrados.value.any {
+            it.posicion.distanceTo(normalizedOffset) < 0.03f
+        }
         if (yaEncontrado) return
 
-        val encontrado = _objetivos.find { it.posicion.distanceTo(normalizedOffset) < 0.03f }
+        val encontrado = _objetivos.find {
+            it.posicion.distanceTo(normalizedOffset) < 0.03f
+        }
         if (encontrado != null) {
             _encontrados.update { it + encontrado }
         }
@@ -94,22 +96,25 @@ class EncuentraPersonajeDificilViewModel @Inject constructor(
         return _encontrados.value.size == _objetivos.size
     }
 
-
     fun guardarResultadoFinal() {
         viewModelScope.launch {
+            var timestamp = System.currentTimeMillis()
+            if (lastSavedTimestamp == timestamp) {
+                timestamp += 1
+            }
+            lastSavedTimestamp = timestamp
+
             val result = GameResult(
-                gameName = "EncuentraObjeto_$dificultad",
+                gameName = "EncuentraObjeto",
                 tiempoEnSegundos = tiempoTranscurrido.value,
                 dificultad = dificultad,
-                timeStamp = System.currentTimeMillis()
+                timeStamp = timestamp
             )
             progresoRepository.guardarResultadoJuego(result)
         }
     }
 }
 
-
-// Función auxiliar para calcular distancia
 private fun Offset.distanceTo(other: Offset): Float {
     return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y))
 }
