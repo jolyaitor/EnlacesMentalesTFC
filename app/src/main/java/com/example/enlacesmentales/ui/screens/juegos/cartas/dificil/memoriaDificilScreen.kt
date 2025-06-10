@@ -15,10 +15,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.enlacesmentales.ui.components.GameFinishedDialog
 
-private val animalEmojis = listOf(
-    "🐶", "🐱", "🐭", "🐹", "🐰", "🦊",
-    "🐻", "🐼", "🐨", "🐯", "🦁", "🐷"
-)
 
 @Composable
 fun MemoriaDificilScreen(
@@ -45,7 +41,7 @@ fun MemoriaDificilScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(125.dp))
 
         Text(
             text = "Juego de Memoria - Difícil",
@@ -60,14 +56,14 @@ fun MemoriaDificilScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(85.dp))
 
         // 4x3 Grid de cartas
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            for (fila in 0 until 3) {
+            for (fila in 0 until 4) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     for (col in 0 until 4) {
                         val index = fila * 4 + col
@@ -97,7 +93,7 @@ fun MemoriaDificilScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         Text(
             text = "Parejas encontradas: $parejasEncontradas / $totalParejas",

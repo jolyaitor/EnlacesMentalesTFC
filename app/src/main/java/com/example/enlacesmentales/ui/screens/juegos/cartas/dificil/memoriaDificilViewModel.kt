@@ -31,7 +31,7 @@ class MemoriaDificilViewModel @Inject constructor(
     private val dificultad: String = savedStateHandle["dificultad"] ?: "dificil"
     private var resultadoGuardado = false
 
-    private val emojis = listOf("🐶", "🐱", "🦊", "🐰", "🐼", "🐸")
+    private val emojis = listOf("🐶", "🐱", "🦊", "🐰", "🐼", "🐸","🐲","🐒")
 
     private val _cartas = MutableStateFlow<List<Carta>>(emptyList())
     val cartas: StateFlow<List<Carta>> = _cartas

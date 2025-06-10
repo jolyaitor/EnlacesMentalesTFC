@@ -66,7 +66,7 @@ fun CamposSemanticosScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -81,7 +81,7 @@ fun CamposSemanticosScreen(
             Text("Tiempo jugado: ${tiempo}s", color = Color.DarkGray, fontSize = 16.sp)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Row(
             Modifier
@@ -208,6 +208,16 @@ fun CamposSemanticosScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        if (isCompleted) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "¡Todo está bien organizado! 🎉",
+                color = Color.Green,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+
+        }
     }
 
     // Mostrar GameFinishedDialog

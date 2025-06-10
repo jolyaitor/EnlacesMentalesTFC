@@ -113,9 +113,10 @@ class MemoriaViewModel @Inject constructor(
 
     companion object {
         private fun generateCards(): List<MemoryCard> {
-            val contents = listOf("🍕", "🍌", "🌶️")
+            val contents = listOf("🍕", "🍌", "🌶️", "🍓", "🥑","🍉") // 5 diferentes
             val paired = (contents + contents).shuffled()
             return paired.mapIndexed { index, content -> MemoryCard(id = index, content = content) }
         }
     }
+
 }

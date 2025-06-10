@@ -47,7 +47,7 @@ fun MemoriaScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(125.dp))
 
         // Título y tiempo
         Column(
@@ -59,7 +59,7 @@ fun MemoriaScreen(
             Text("Tiempo jugado: ${elapsedTime}s", fontSize = 18.sp, color = Color.DarkGray)
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(85.dp))
 
         // Cartas 3x2
         Column(
@@ -68,7 +68,7 @@ fun MemoriaScreen(
                 .padding(horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            for (row in 0 until 2) {
+            for (row in 0 until 4) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -104,7 +104,7 @@ fun MemoriaScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(45.dp))
         Text(
             text = "Parejas encontradas: $parejasEncontradas / $totalParejas",
             fontSize = 16.sp,
