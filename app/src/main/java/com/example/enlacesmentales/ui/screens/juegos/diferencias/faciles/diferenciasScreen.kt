@@ -136,9 +136,7 @@ fun EncuentraLasDiferenciasScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            if (isCompleted) {
-                Text("¡Felicidades! Encontraste todas 🎉", fontWeight = FontWeight.Bold)
-            }
+
         }
     }
 

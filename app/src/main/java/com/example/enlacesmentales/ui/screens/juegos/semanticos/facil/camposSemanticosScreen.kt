@@ -207,17 +207,7 @@ fun CamposSemanticosScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-        if (isCompleted) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "¡Todo está bien organizado! 🎉",
-                color = Color.Green,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
 
-        }
     }
 
     // Mostrar GameFinishedDialog

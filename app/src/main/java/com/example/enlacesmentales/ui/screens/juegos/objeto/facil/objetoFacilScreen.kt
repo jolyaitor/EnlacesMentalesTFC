@@ -165,16 +165,6 @@ fun EncuentraPersonajeScreen(
                     )
                 }
             }
-
-            if (juegoCompletado) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "¡Todos encontrados! 🎉",
-                    color = Color.Green,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
         }
     }
 
